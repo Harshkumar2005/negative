@@ -361,8 +361,8 @@ export const FileSystemProvider = ({ children }) => {
   };
 
   return (
-    <FileSystemContext.Provider value={contextValue}>
+    <FileSystemProvider.Provider value={contextValue}>
       {children}
-    </FileSystemContext.Provider>
+    </FileSystemProvider.Provider>
   );
 };

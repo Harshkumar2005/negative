@@ -14,83 +14,6 @@ export const FileSystemProvider = ({ children }) => {
   const [activeFile, setActiveFile] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const initFs = async () => {
-      try {
-        await new Promise((resolve, reject) => {
-          BrowserFS.configure({
-            fs: 'IndexedDB',
-            options: { storeName: 'web-code-editor-fs' }
-          }, (err) => {
-            if (err) return reject(err);
-            setFs(BrowserFS.BFSRequire('fs'));
-            resolve();
-          });
-        });
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Failed to initialize filesystem:', error);
-        setIsLoading(false);
-      }
-    };
-    initFs();
-  }, []);
-
-  const listFiles = useCallback((path = '/workspace') => {
-    if (!fs) return [];
-    try {
-      return fs.readdirSync(path).map(file => {
-        const filePath = `${path}/${file}`;
-        const stats = fs.statSync(filePath);
-        return {
-          name: file,
-          path: filePath,
-          isDirectory: stats.isDirectory(),
-          size: stats.size,
-          modified: stats.mtime
-        };
-      });
-    } catch (err) {
-      console.error(`Error listing files at ${path}:`, err);
-      return [];
-    }
-  }, [fs]);
-
-  const value = {
-    fs,
-    files,
-    openFiles,
-    activeFile,
-    currentPath,
-    isLoading,
-    setCurrentPath,
-    listFiles
-  };
-
-  return (
-    <FileSystemContext.Provider value={value}>
-      {children}
-    </FileSystemContext.Provider>
-  );
-};
-
-
-/*import React, { createContext, useState, useEffect, useCallback } from 'react';
-import * as BrowserFS from 'browserfs';
-import { set, get } from 'idb-keyval';
-import JSZip from 'jszip';
-
-// Create context
-export const FileSystemContext = createContext();
-
-export const FileSystemProvider = ({ children }) => {
-  const [fs, setFs] = useState(null);
-  const [currentPath, setCurrentPath] = useState('/');
-  const [files, setFiles] = useState([]);
-  const [openFiles, setOpenFiles] = useState([]);
-  const [activeFile, setActiveFile] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-
   // Initialize BrowserFS
   useEffect(() => {
     const initFs = async () => {
@@ -131,7 +54,7 @@ export const FileSystemProvider = ({ children }) => {
     
     try {
       const fileList = fs.readdirSync(path);
-      const files = fileList.map(file => {
+      const filesData = fileList.map(file => {
         const filePath = `${path}/${file}`;
         const stats = fs.statSync(filePath);
         return {
@@ -142,8 +65,8 @@ export const FileSystemProvider = ({ children }) => {
           modified: stats.mtime
         };
       });
-      setFiles(files);
-      return files;
+      setFiles(filesData);
+      return filesData;
     } catch (err) {
       console.error(`Error listing files at ${path}:`, err);
       return [];
@@ -262,12 +185,20 @@ export const FileSystemProvider = ({ children }) => {
         
         // Update open files references
         if (activeFile && activeFile.path === oldPath) {
-          setActiveFile({...activeFile, path: newPath, name: newPath.split('/').pop()});
+          setActiveFile({
+            ...activeFile, 
+            path: newPath, 
+            name: newPath.split('/').pop()
+          });
         }
         
         setOpenFiles(prev => prev.map(f => {
           if (f.path === oldPath) {
-            return {...f, path: newPath, name: newPath.split('/').pop()};
+            return {
+              ...f, 
+              path: newPath, 
+              name: newPath.split('/').pop()
+            };
           }
           return f;
         }));
@@ -408,7 +339,7 @@ export const FileSystemProvider = ({ children }) => {
     }
   }, [fs, currentPath, isLoading, listFiles]);
 
-  const value = {
+  const contextValue = {
     fs,
     files,
     openFiles,
@@ -430,9 +361,8 @@ export const FileSystemProvider = ({ children }) => {
   };
 
   return (
-    <FileSystemContext.Provider value={value}>
+    <FileSystemContext.Provider value={contextValue}>
       {children}
     </FileSystemContext.Provider>
   );
 };
-*/
